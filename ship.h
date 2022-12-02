@@ -29,6 +29,12 @@ public:
         BOTTOM   = 3,
     };
 
+    enum Status {
+        FREE                = 0, // no collision, no bouncing
+        BOUNCING_HORIZONTAL = 1, // a horizontal collision was detected, no action taken yet
+        BOUNCING_VERTICAL   = 2, // a vertical collision was detected, no action taken yet
+    };
+
 public:
     virtual ~Ship(void) {}
 
@@ -38,9 +44,12 @@ public:
     void speedUp(void);
     void slowDown(void);
     void crash(void);
-    bool doesCrash(void);
+    void updateStatus(void);
     void startBouncing(void);
     void stopBouncing(void);
+    Status getStatus(void);
+    void setStatus(Status newStatus);
+    void stop(void);
 
     void translate(const osg::Vec3 trans);
     void rotate(double angle);
@@ -59,6 +68,7 @@ private:
     bool _isBouncing;
     double _speed;
     bool _directionButtons[4];
+    Status _status;
     osg::Vec3 _direction;
     osg::Vec3 _velocity;    // = speed * direction
 };

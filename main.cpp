@@ -72,24 +72,37 @@ extern "C" {
 osg::ref_ptr<Ship> ship;
 
 float shipX, shipY, shipW, shipH, barX, barY, barW, barH;
-// https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-bool Ship::doesCrash(){
+float prevX = 0;
+float prevY = 0;
+float distX = shipW / 2 + barW / 2;  // distance between centers if touching
+float distY = shipH / 2 + barH / 2;
+/*
+https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+"One of the simpler forms of collision detection is between two rectangles that are axis
+aligned — meaning no rotation. The algorithm works by ensuring there is no gap between
+any of the 4 sides of the rectangles. Any gap means a collision does not exist."
+*/
+void Ship::updateStatus(){
     //osg::Vec3 position = Ship.getPosition();
     // lots of reverse engineering going on here
     Ship *_ship = ship.get();
     osg::Vec3 shipPosition = _ship->getPosition();
+    //osg::Vec3 shipVelocity = _ship->_velocity;
+    float xVelocity = _ship->_velocity.x();
+    float yVelocity = _ship->_velocity.y();
     //printf("VELOCITY: %f %f %f\n", shipPosition[0], shipPosition[1], shipPosition[2]);
     World *world = World::instance();
 
     // we only work with x, y
     // coordinates of ship's bounding box
-    // x, y, z: middle of the bounding box
-    shipX = shipPosition[0]; //+ SHIP_SIZE / 2;
-    shipY = shipPosition[1]; //+ SHIP_SIZE / 2;
+    // x, y: middle of the bounding box
+    shipX = shipPosition[0] - SHIP_SIZE;
+    shipY = shipPosition[1] - SHIP_SIZE;
     // width, height of ship's bounding box
-    shipW = SHIP_SIZE;
-    shipH = SHIP_SIZE;
+    shipW = SHIP_SIZE * 2;
+    shipH = SHIP_SIZE * 2;
 
+    printf("vx: %f | vy:%f | ", xVelocity, yVelocity);
     printf("x: %f | y:%f | ", shipX, shipY);
 
     for(int i = 0; i < noOfBarriers; i++){
@@ -101,23 +114,56 @@ bool Ship::doesCrash(){
         barW = barriers[i].halfLengthX * 2;
         barH = barriers[i].halfLengthY * 2;
 
-        if(
-            shipX < barX + barW  &&
+        if( shipX < barX + barW  &&
             shipX + shipW > barX &&
             shipY < barY + barH  &&
-            shipH + shipY > barY
-        ){
-            if (_ship->_isBouncing){
-                _ship->startBouncing();
-                return false;
+            shipY + shipH > barY) {
+            // it was free, we set it bouncing for the next frame
+            if (_ship->_status == FREE){
+                /*
+                if (shipX - xVelocity < barX - barW || shipX + shipW + xVelocity> barX)
+                    _ship->_status = BOUNCING_VERTICAL;
+                else if (shipY - yVelocity < barY - barH || shipH + shipY + yVelocity > barY)
+                    _ship->_status = BOUNCING_HORIZONTAL;
+                else
+                    printf("oooopsie\n");
+                    */
+
+                if (prevX >= barX + barW  || prevX + shipW <= barX)
+                    _ship->_status = BOUNCING_VERTICAL;
+                else if (prevY >= barY + barH  || prevY + shipH <= barY)
+                    _ship->_status = BOUNCING_HORIZONTAL;
+                else
+                    printf("oooopsie\n");
+
+                /*
+                // from left to right
+                if (shipX + xVelocity + SHIP_SIZE / 2  > barX - barW)
+                    _ship->_status = BOUNCING_VERTICAL;
+                else if (shipY + yVelocity + SHIP_SIZE / 2 > barY - barW)
+                    _ship->_status = BOUNCING_HORIZONTAL;
+                else
+                    printf("oooopsie\n");
+*/
             }
-            _ship->startBouncing();
-            return true;    // cont
         }
+
+
+            /*
+            else {
+                // it was bouncing, we free it for the next frame
+                _ship->_status == FREE;
+            }
+        }
+        else {
+            // no collision, still free (not needed?)
+            _ship->_status == FREE;
+        }*/
     }
 
-    _ship->stopBouncing();
-    return false;
+    prevX = shipX;
+    prevY = shipY;
+    return;
 }
 
 

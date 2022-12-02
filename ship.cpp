@@ -38,7 +38,8 @@ Ship::Ship(osg::MatrixTransform *visual):
     _velocity(0.0, 0.0, 0.0),
     _direction(1.0, 0.0, 0.0),
     _speed(0),
-    _isBouncing(false)
+    _isBouncing(false),
+    _status(FREE)
 {
     // no active direction at beginning
     _directionButtons[LEFT]     = false;
@@ -145,6 +146,18 @@ Ship::stopBouncing(void)
     _isBouncing = false;
 }
 
+Ship::Status
+Ship::getStatus()
+{
+    return _status;
+}
+
+void
+Ship::setStatus(Status newStatus)
+{
+    _status = newStatus;
+}
+
 void
 Ship::speedUp(void)
 {
@@ -186,6 +199,11 @@ Ship::translate(const osg::Vec3 translation)
     _visual->postMult(matrix);
 }
 
+void
+Ship::stop()
+{
+     _speed = 0;
+}
 
 void
 Ship::rotate(double angle)
@@ -221,13 +239,29 @@ Ship::getOrientation(void) const
 void
 Ship::onUpdate(double time)
 {
+    if (_status == BOUNCING_HORIZONTAL){
+        _direction.y() = -_direction.y();
+        printf("Horizontal\n");
+        _status = FREE;
+    }
+    else if (_status == BOUNCING_VERTICAL) {
+        _direction.x() = -_direction.x();
+        printf("Vertical\n");
+        _status = FREE;
+    }
+    else {
+        printf("No crsh\n");
+    }
+    updateStatus();
+
+    /*
     if (doesCrash()){
         printf("Crsh\n");
         crash();
     }
     else{
         printf("No crsh\n");
-    }
+    }*/
 
 
     double delta = time - _lastFrame;

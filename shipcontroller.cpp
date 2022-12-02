@@ -63,6 +63,10 @@ ShipController::handle(const osgGA::GUIEventAdapter &event, osgGA::GUIActionAdap
             std::cout << "-" << std::endl;
             _ship->slowDown();
             break;
+        case osgGA::GUIEventAdapter::KEY_C:
+            std::cout << "-" << std::endl;
+            _ship->stop();
+            break;
     }
 
     return false;
